@@ -164,6 +164,7 @@ module Tess
             url: p[:url],
             see_also: [p[:url]]
           }
+          providers[provider_key][:see_also] << p[:provider]
           providers[provider_key][:see_also] << p[:same_as]
           providers[provider_key][:see_also] << p[:subject_of]
           providers[provider_key][:see_also] << p[:subject_of_url]
