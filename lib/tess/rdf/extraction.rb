@@ -156,7 +156,8 @@ module Tess
               [:provider, RDF::Vocab::SCHEMA.name, :name],
               [:provider, RDF::Vocab::SCHEMA.url, :url],
               [:provider, RDF::Vocab::SCHEMA.sameAs, :same_as, { optional: true }],
-              [:provider, RDF::Vocab::SCHEMA.subjectOf, :subject_of, { optional: true }]).each do |p|
+              [:provider, RDF::Vocab::SCHEMA.subjectOf, :subject_of, { optional: true }],
+              [:subject_of, RDF::Vocab::SCHEMA.url, :subject_of_url, { optional: true }]).each do |p|
           provider_key = p[:url]
           providers[provider_key] ||= {
             name: p[:name],
@@ -165,6 +166,7 @@ module Tess
           }
           providers[provider_key][:see_also] << p[:same_as]
           providers[provider_key][:see_also] << p[:subject_of]
+          providers[provider_key][:see_also] << p[:subject_of_url]
         end
 
         providers.values.each { |provider| provider[:see_also] = provider[:see_also].compact.uniq }

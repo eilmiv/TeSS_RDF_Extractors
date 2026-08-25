@@ -195,12 +195,21 @@ class FieldTest < Test::Unit::TestCase
       "name": "Only SubjectOf",
       "url": "https://subject.example.org",
       "subjectOf": "https://subject.example.org/page"
+    },
+    {
+      "@type": "Organization",
+      "name": "Wrapped SubjectOf",
+      "url": "https://wrapped.example.org",
+      "subjectOf": {
+        "@type": "CreativeWork",
+        "url": "https://wrapped.example.org/page"
+      }
     }
   ]
 }])
 
     providers = course_instance_extractor(json).send(:extract_providers)
-    assert_equal 2, providers.length
+    assert_equal 3, providers.length
 
     example = providers.find { |p| p[:name] == 'Example Org' }
     assert_equal 'https://example.org', example[:url]
@@ -209,6 +218,10 @@ class FieldTest < Test::Unit::TestCase
     subject_only = providers.find { |p| p[:name] == 'Only SubjectOf' }
     assert_equal 'https://subject.example.org', subject_only[:url]
     assert_equal ['https://subject.example.org', 'https://subject.example.org/page'].sort, subject_only[:see_also].sort
+
+    wrapped = providers.find { |p| p[:name] == 'Wrapped SubjectOf' }
+    assert_equal 'https://wrapped.example.org', wrapped[:url]
+    assert_equal ['https://wrapped.example.org', 'https://wrapped.example.org/page'].sort, wrapped[:see_also].sort
   end
 
   test 'infer end date from start date and duration' do
