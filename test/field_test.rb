@@ -176,6 +176,41 @@ class FieldTest < Test::Unit::TestCase
     assert_equal ['students', 'people', 'researchers'], course_extractor(json).send(:extract_audience)
   end
 
+  test 'extract providers with see_also' do
+    json = %(
+[{
+  "@context": "https://schema.org/",
+  "@type": "CourseInstance",
+  "name": "Dummy Course Instance",
+  "provider": [
+    {
+      "@type": "Organization",
+      "name": "Example Org",
+      "url": "https://example.org",
+      "sameAs": ["https://example.org/a", "https://example.org/b"],
+      "subjectOf": "https://example.org/c"
+    },
+    {
+      "@type": "Organization",
+      "name": "Only SubjectOf",
+      "url": "https://subject.example.org",
+      "subjectOf": "https://subject.example.org/page"
+    }
+  ]
+}])
+
+    providers = course_instance_extractor(json).send(:extract_providers)
+    assert_equal 2, providers.length
+
+    example = providers.find { |p| p[:name] == 'Example Org' }
+    assert_equal 'https://example.org', example[:url]
+    assert_equal ['https://example.org', 'https://example.org/a', 'https://example.org/b', 'https://example.org/c'].sort, example[:see_also].sort
+
+    subject_only = providers.find { |p| p[:name] == 'Only SubjectOf' }
+    assert_equal 'https://subject.example.org', subject_only[:url]
+    assert_equal ['https://subject.example.org', 'https://subject.example.org/page'].sort, subject_only[:see_also].sort
+  end
+
   test 'infer end date from start date and duration' do
     json = %(
 [{

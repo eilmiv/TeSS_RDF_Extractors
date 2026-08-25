@@ -147,6 +147,28 @@ module Tess
         values
       end
 
+      def extract_providers(subject: resource)
+        providers = {}
+
+        query([subject, RDF::Vocab::SCHEMA.provider, :provider],
+              [:provider, RDF.type, RDF::Vocab::SCHEMA.Organization],
+              [:provider, RDF::Vocab::SCHEMA.name, :name],
+              [:provider, RDF::Vocab::SCHEMA.url, :url],
+              [:provider, RDF::Vocab::SCHEMA.sameAs, :same_as, { optional: true }],
+              [:provider, RDF::Vocab::SCHEMA.subjectOf, :subject_of, { optional: true }]).each do |p|
+          provider_key = p[:url]
+          providers[provider_key] ||= {
+            name: p[:name],
+            url: p[:url],
+            see_also: [p[:url]]
+          }
+          providers[provider_key][:see_also] << p[:same_as]
+          providers[provider_key][:see_also] << p[:subject_of]
+        end
+
+        providers.values.each { |provider| provider.delete(:see_also) if provider[:see_also].empty? }
+      end
+
       def extract_nodes(subject: resource)
         query([subject, RDF::Vocab::SCHEMA.provider, :provider],
               [:provider, RDF.type, RDF::Vocab::SCHEMA.Organization],
