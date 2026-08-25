@@ -86,6 +86,7 @@ module Tess
         params[:url] = extract_value(RDF::Vocab::SCHEMA.url)
         params[:url] ||= resource.value if resource.is_a?(RDF::URI)
         params[:keywords] = extract_keyword_like(RDF::Vocab::SCHEMA.keywords)
+        params[:providers] = extract_providers
         params[:node_names] = extract_nodes
         params.merge!(extract_topics)
 
@@ -166,7 +167,7 @@ module Tess
           providers[provider_key][:see_also] << p[:subject_of]
         end
 
-        providers.values.each { |provider| provider.delete(:see_also) if provider[:see_also].empty? }
+        providers.values.each { |provider| provider[:see_also] = provider[:see_also].compact.uniq }
       end
 
       def extract_nodes(subject: resource)
