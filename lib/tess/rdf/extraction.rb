@@ -24,9 +24,13 @@ module Tess
         end
       end
 
-      def query(*patterns)
+      def query(*patterns, optional: [])
         results = []
         query = RDF::Query.new(patterns.map { |p| RDF::Query::Pattern.new(*p) })
+        unless optional.empty?
+          optional_query = RDF::Query.new(optional.map { |p| RDF::Query::Pattern.new(*p) })
+          query = SPARQL::Algebra::Operator::LeftJoin.new(query, optional_query)
+        end
         query.execute(@_graph).each do |solution|
           results << solution.bindings.transform_values { |v| parse_value(v) }
         end
@@ -158,13 +162,15 @@ module Tess
               [:provider, RDF::Vocab::SCHEMA.name, :name],
               [:provider, RDF::Vocab::SCHEMA.url, :url],
               [:provider, RDF::Vocab::SCHEMA.sameAs, :same_as, { optional: true }],
-              [:provider, RDF::Vocab::SCHEMA.subjectOf, :subject_of, { optional: true }],
-              [:subject_of, RDF::Vocab::SCHEMA.url, :subject_of_url, { optional: true }]).each do |p|
+              optional: [
+                [:provider, RDF::Vocab::SCHEMA.subjectOf, :subject_of],
+                [:subject_of, RDF::Vocab::SCHEMA.url, :subject_of_url, { optional: true }]
+              ]).each do |p|
           provider_key = p[:url]
           providers[provider_key] ||= {
             name: p[:name],
             url: p[:url],
-            see_also: [p[:url]]
+            see_also: []
           }
           providers[provider_key][:see_also] << p[:provider]
           providers[provider_key][:see_also] << p[:same_as]
